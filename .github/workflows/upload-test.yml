@@ -1,0 +1,23 @@
+name: Upload Artifact Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload-artifact-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create a dummy file to upload
+        run: echo "test artifact content" > dummy.txt
+
+      - name: Upload artifact (pinned to v3.1.2)
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: test-artifact
+          path: dummy.txt
