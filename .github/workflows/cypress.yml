@@ -41,14 +41,14 @@ jobs:
 
       - name: Upload Cypress videos (if tests fail)
         if: failure()
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v2
         with:
           name: cypress-videos
           path: frontend/cypress/videos
 
       - name: Upload Cypress screenshots (if tests fail)
         if: failure()
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v2
         with:
           name: cypress-screenshots
           path: frontend/cypress/screenshots
