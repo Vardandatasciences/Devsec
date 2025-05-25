@@ -45,14 +45,14 @@ jobs:
 
       - name: Upload Cypress videos
         if: always()  # Upload artifacts even if tests fail
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: cypress-videos
           path: frontend/cypress/videos
 
       - name: Upload Cypress screenshots
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: cypress-screenshots
           path: frontend/cypress/screenshots
