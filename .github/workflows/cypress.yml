@@ -21,16 +21,15 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
+        working-directory: frontend
         run: npm ci
 
-      - name: Build app (optional, remove if not needed)
-        run: npm run build
-
-      - name: Start app server
+      - name: Start frontend dev server
+        working-directory: frontend
         run: npm run serve &
 
-      - name: Wait for app to be ready
+      - name: Wait for frontend to be ready
         uses: jakejarvis/wait-action@v0.1.0
         with:
           url: http://localhost:8081
