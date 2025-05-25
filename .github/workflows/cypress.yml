@@ -24,14 +24,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build app (optional, remove if not needed)
+        run: npm run build
+
       - name: Start app server
         run: npm run serve &
-        # Modify this if your start command is different
 
       - name: Wait for app to be ready
         uses: jakejarvis/wait-action@v0.1.0
         with:
-          url: http://localhost:8080
+          url: http://localhost:8081
           timeout: 60
 
       - name: Run Cypress tests
