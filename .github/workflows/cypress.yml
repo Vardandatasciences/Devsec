@@ -30,9 +30,9 @@ jobs:
         run: npm run serve &
 
       - name: Wait for frontend to be ready
-        uses: francium/wait-on-action@v1
+        uses: jakejarvis/wait-action@v0.1.0
         with:
-          url: http://localhost:8081
+          url: http://localhost:8082
           timeout: 60
 
       - name: Run Cypress tests
