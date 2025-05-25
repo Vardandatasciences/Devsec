@@ -41,7 +41,21 @@ jobs:
 
       - name: Run Cypress tests and record to Dashboard
         working-directory: frontend
-        run: npx cypress run --record --key $CYPRESS_RECORD_KEY --spec "frontend/cypress/e2e/**/*.js"
+        run: npx cypress run --record --key $CYPRESS_RECORD_KEY --spec "cypress/e2e/**/*.js"
+
+      - name: Upload Cypress videos
+        if: always()  # Upload artifacts even if tests fail
+        uses: actions/upload-artifact@v5
+        with:
+          name: cypress-videos
+          path: frontend/cypress/videos
+
+      - name: Upload Cypress screenshots
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots
 
       - name: Send Slack notification on failure
         if: failure()
