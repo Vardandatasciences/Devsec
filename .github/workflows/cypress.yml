@@ -1,4 +1,4 @@
-name: Cypress Tests
+name: CI with Cypress Dashboard & Slack Notifications
 
 on:
   push:
@@ -11,6 +11,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
     steps:
       - name: Checkout code
@@ -35,20 +39,44 @@ jobs:
           url: http://localhost:8082
           timeout: 60
 
-      - name: Run Cypress tests
+      - name: Run Cypress tests and record to Dashboard
         working-directory: frontend
-        run: npx cypress run --spec "frontend/cypress/e2e/**/*.js"
+        run: npx cypress run --record --key $CYPRESS_RECORD_KEY --spec "cypress/e2e/**/*.js"
 
-      - name: Upload Cypress videos (if tests fail)
-        if: failure()
-        uses: actions/upload-artifact@v2
+      - name: Upload Cypress videos
+        if: always()
+        uses: actions/upload-artifact@v3
         with:
           name: cypress-videos
           path: frontend/cypress/videos
 
-      - name: Upload Cypress screenshots (if tests fail)
-        if: failure()
-        uses: actions/upload-artifact@v2
+      - name: Upload Cypress screenshots
+        if: always()
+        uses: actions/upload-artifact@v3
         with:
           name: cypress-screenshots
           path: frontend/cypress/screenshots
+
+      - name: Send Slack notification on failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL: '#srilakshmi.a'
+          SLACK_COLOR: danger
+          SLACK_TITLE: 'CI Pipeline Failed'
+          SLACK_MESSAGE: |
+            Cypress tests failed.
+            View detailed reports at https://cloud.cypress.io/projects/4aq1ki/runs
+
+      - name: Send Slack notification on success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL: '#srilakshmi.a'
+          SLACK_COLOR: good
+          SLACK_TITLE: 'CI Pipeline Succeeded'
+          SLACK_MESSAGE: |
+            Cypress tests passed successfully.
+            View detailed reports at https://cloud.cypress.io/projects/4aq1ki/runs
