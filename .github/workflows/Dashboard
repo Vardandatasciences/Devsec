@@ -1,0 +1,68 @@
+name: CI with Cypress Dashboard & Slack Notifications
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Start frontend dev server
+        working-directory: frontend
+        run: npm run serve &
+
+      - name: Wait for frontend to be ready
+        uses: jakejarvis/wait-action@v0.1.0
+        with:
+          url: http://localhost:8082
+          timeout: 60
+
+      - name: Run Cypress tests and record to Dashboard
+        working-directory: frontend
+        run: npx cypress run --record --key $CYPRESS_RECORD_KEY --spec "frontend/cypress/e2e/**/*.js"
+
+      - name: Send Slack notification on failure
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL: '#srilakshmi.a'
+          SLACK_COLOR: danger
+          SLACK_TITLE: 'CI Pipeline Failed'
+          SLACK_MESSAGE: |
+            Cypress tests failed.
+            View detailed reports at https://cloud.cypress.io/projects/4aq1ki/runs
+
+      - name: Send Slack notification on success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_CHANNEL: '#srilakshmi.a'
+          SLACK_COLOR: good
+          SLACK_TITLE: 'CI Pipeline Succeeded'
+          SLACK_MESSAGE: |
+            Cypress tests passed successfully.
+            View detailed reports at https://cloud.cypress.io/projects/4aq1ki/runs
