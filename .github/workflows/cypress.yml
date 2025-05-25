@@ -21,18 +21,20 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
+        working-directory: frontend
         run: npm ci
 
-      - name: Start app server
+      - name: Start frontend dev server
+        working-directory: frontend
         run: npm run serve &
-        # Modify this if your start command is different
 
-      - name: Wait for app to be ready
-        uses: jakejarvis/wait-action@v0.1.0
+      - name: Wait for frontend to be ready
+        uses: francium/wait-on-action@v1
         with:
-          url: http://localhost:8080
+          url: http://localhost:8081
           timeout: 60
 
       - name: Run Cypress tests
+        working-directory: frontend
         run: npx cypress run
