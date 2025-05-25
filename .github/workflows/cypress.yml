@@ -37,4 +37,19 @@ jobs:
 
       - name: Run Cypress tests
         working-directory: frontend
-        run: npx cypress run
+        # Run Cypress and keep video/screenshot artifacts on failure
+        run: npx cypress run --spec "frontend/cypress/e2e/**/*.js"
+
+      - name: Upload Cypress videos (only if tests fail)
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cypress-videos
+          path: frontend/cypress/videos
+
+      - name: Upload Cypress screenshots (only if tests fail)
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots
