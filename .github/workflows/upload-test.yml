@@ -1,23 +1,73 @@
-name: Upload Artifact Test
+name: Cypress Tests
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  upload-artifact-test:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Create a dummy file to upload
-        run: echo "test artifact content" > dummy.txt
-
-      - name: Upload artifact (pinned to v3.1.2)
-        uses: actions/upload-artifact@v3.1.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          name: test-artifact
-          path: dummy.txt
+          node-version: 18
+
+      - name: Cache frontend dependencies
+        uses: actions/cache@v3
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Cache backend dependencies
+        uses: actions/cache@v3
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-backend-node-modules-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-node-modules-
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Start backend service
+        working-directory: backend
+        run: npm run backend:start &
+
+      - name: Start frontend dev server
+        working-directory: frontend
+        run: npm run serve &
+
+      - name: Wait for frontend to be ready
+        uses: jakejarvis/wait-action@v0.1.0
+        with:
+          url: http://localhost:8082
+          timeout: 60
+
+      - name: Run Cypress Create and Submit Record Test with logs
+        working-directory: frontend
+        run: |
+          npx cypress run --spec "frontend/cypress/e2e/create-submit-record.spec.js" --reporter mocha --reporter-options toConsole=true
+
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
