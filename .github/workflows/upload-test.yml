@@ -70,7 +70,7 @@ jobs:
       - name: Run Cypress Create and Submit Record Test with logs
         working-directory: frontend
         run: |
-          npx cypress run --spec "frontend/cypress/e2e/create-submit-record.spec.js"
+          npx cypress run --spec "frontend/cypress/e2e/incident_create_spec.js"
 
       - name: Notify Slack
         if: always()
