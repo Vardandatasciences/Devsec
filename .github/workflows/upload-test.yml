@@ -54,10 +54,18 @@ jobs:
         run: npm run serve &
 
       - name: Wait for frontend to be ready
-        uses: wei/wait-for@v1
-        with:
-          url: http://localhost:8082
-          timeout: 60
+        run: |
+          for i in {1..30}; do
+            if curl --output /dev/null --silent --head --fail http://localhost:8082; then
+              echo "Frontend is up!"
+              exit 0
+            else
+              echo "Waiting for frontend to start... ($i/30)"
+              sleep 2
+            fi
+          done
+          echo "Frontend did not start in time"
+          exit 1
 
       - name: Run Cypress Create and Submit Record Test with logs
         working-directory: frontend
