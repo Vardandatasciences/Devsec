@@ -34,10 +34,10 @@ jobs:
         run: npm run serve &
 
       - name: Wait for frontend to be ready
-        uses: jakejarvis/wait-action@v0.1.0
+        uses: wei/wait-for@v1
         with:
-          entryPoint: http://localhost:8080
-          args: 30
+          url: http://localhost:8080
+          timeout: 60
 
       - name: Run Cypress Create and Submit Record Test
         working-directory: frontend
