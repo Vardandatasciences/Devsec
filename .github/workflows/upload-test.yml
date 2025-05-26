@@ -1,4 +1,4 @@
-name: Cypress Tests
+name: Cypress Tests Debug
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup Node.js
@@ -21,61 +21,32 @@ jobs:
         with:
           node-version: 18
 
-      - name: Cache frontend dependencies
-        uses: actions/cache@v3
-        with:
-          path: frontend/node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
-
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
 
-      - name: Cache backend dependencies
-        uses: actions/cache@v3
-        with:
-          path: backend/node_modules
-          key: ${{ runner.os }}-backend-node-modules-${{ hashFiles('backend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-backend-node-modules-
-
-      - name: Install backend dependencies
-        working-directory: backend
-        run: npm ci
-
-      - name: Start backend service
-        working-directory: backend
-        run: npm run backend:start &
+      - name: List Cypress spec files for debugging
+        working-directory: frontend
+        run: ls -l cypress/e2e/
 
       - name: Start frontend dev server
         working-directory: frontend
         run: npm run serve &
 
       - name: Wait for frontend to be ready
-        run: |
-          for i in {1..30}; do
-            if curl --output /dev/null --silent --head --fail http://localhost:8080; then
-              echo "Frontend is up!"
-              exit 0
-            else
-              echo "Waiting for frontend to start... ($i/30)"
-              sleep 2
-            fi
-          done
-          echo "Frontend did not start in time"
-          exit 1
-     
+        uses: jakejarvis/wait-action@v0.1.0
+        with:
+          entryPoint: http://localhost:8080
+          args: 30
+
       - name: Run Cypress Create and Submit Record Test
         working-directory: frontend
         run: npx cypress run --spec "cypress/e2e/incident_create_spec.js"
-  
-      - name:  Notify Slack
+
+      - name: Notify Slack
         if: always()
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
-    env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
