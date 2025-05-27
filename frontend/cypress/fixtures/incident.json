@@ -1,0 +1,29 @@
+[
+    {
+      "IncidentId": 101,
+      "IncidentTitle": "Unauthorized Access Detected",
+      "Description": "An unknown login attempt was detected on the admin portal.",
+      "RiskCategory": "Security",
+      "RiskPriority": "High",
+      "Date": "2025-05-20",
+      "Time": "10:30",
+      "Origin": "SIEM",
+      "Comments": "Needs review by InfoSec.",
+      "Mitigation": "Enable 2FA and reset passwords.",
+      "Attachments": "https://example.com/file1.pdf"
+    },
+    {
+      "IncidentId": 102,
+      "IncidentTitle": "Data Export Without Encryption",
+      "Description": "Sensitive data was exported without encryption.",
+      "RiskCategory": "Compliance",
+      "RiskPriority": "Medium",
+      "Date": "2025-05-21",
+      "Time": "14:20",
+      "Origin": "Audit",
+      "Comments": "",
+      "Mitigation": "Implement encryption policy for all exports.",
+      "Attachments": ""
+    }
+  ]
+  

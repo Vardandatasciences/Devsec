@@ -1,5 +1,5 @@
 describe('Create and Submit Incident Record', () => {
-  const baseUrl = 'http://localhost:8082';  // Your frontend URL
+  const baseUrl = 'http://localhost:8080';  // Your frontend URL
 
   it('should create a new incident via the UI form and confirm submission', () => {
     cy.visit(baseUrl);
