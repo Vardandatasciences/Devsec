@@ -8,7 +8,7 @@ on:
 
 env:
   CYPRESS_baseUrl: http://localhost:8081
-  EMAIL_TO: your-team@example.com
+  EMAIL_TO: srilakshmi.a@vardaanglobal.com
   EMAIL_FROM: your-github-actions@example.com
   SMTP_SERVER: smtp.example.com
   SMTP_PORT: 587
@@ -69,7 +69,7 @@ jobs:
 
       - name: Upload Cypress artifacts on failure
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: cypress-artifacts
           path: |
