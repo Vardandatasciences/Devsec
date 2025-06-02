@@ -1,0 +1,113 @@
+name: CI Pipeline - Incident Management
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  CYPRESS_baseUrl: http://localhost:8081
+  EMAIL_TO: srilakshmi.a@vardaanglobal.com
+  EMAIL_FROM: your-github-actions@example.com
+  SMTP_SERVER: smtp.example.com
+  SMTP_PORT: 587
+  SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+  SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+
+jobs:
+  test-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 📦 Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: 📦 Install Backend Dependencies + Bandit
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install bandit
+
+      - name: 🔍 Run Bandit Security Scan (Python Backend)
+        working-directory: ./backend
+        run: bandit -r . -lll -iii
+
+      - name: 🔐 Run Snyk Scan on Backend (Python)
+        uses: snyk/actions/python@master
+        with:
+          command: test
+          args: --file=requirements.txt
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        working-directory: ./backend
+
+      - name: 🔐 Run Snyk Scan on Frontend (Node.js)
+        uses: snyk/actions/node@master
+        with:
+          command: test
+          args: .
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        working-directory: ./frontend
+
+      - name: 🚀 Start Backend Server
+        working-directory: ./backend
+        run: nohup python manage.py runserver 8081 &
+
+      - name: ⏳ Wait for Backend Startup
+        run: sleep 15
+
+      - name: 🧪 Run Cypress UI Tests
+        working-directory: ./frontend
+        run: npx cypress run --spec "cypress/e2e/incidents.cy.js"
+
+      - name: 📤 Upload Cypress Artifacts on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: cypress-artifacts
+          path: |
+            frontend/cypress/screenshots
+            frontend/cypress/videos
+
+  notify:
+    needs: test-and-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📧 Send Email Notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ env.SMTP_SERVER }}
+          server_port: ${{ env.SMTP_PORT }}
+          username: ${{ env.SMTP_USERNAME }}
+          password: ${{ env.SMTP_PASSWORD }}
+          subject: CI Pipeline - Incident Management - ${{ needs.test-and-scan.result }}
+          to: ${{ env.EMAIL_TO }}
+          from: ${{ env.EMAIL_FROM }}
+          body: |
+            The CI pipeline for Incident Management completed with status: ${{ needs.test-and-scan.result }}.
+
+            ✅ Bandit and Snyk security scans were executed.
+            ✅ Cypress UI tests were run.
+
+            Please check the GitHub Actions logs for full details.
