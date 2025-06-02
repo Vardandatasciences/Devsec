@@ -43,7 +43,6 @@ jobs:
         working-directory: frontend
         run: npx cypress run --record --key $CYPRESS_RECORD_KEY --spec "cypress/e2e/**/*.js"
 
-
       - name: Send Slack notification on failure
         if: failure()
         uses: rtCamp/action-slack-notify@v2
