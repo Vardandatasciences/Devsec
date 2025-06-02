@@ -32,7 +32,7 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Setup Python 
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
@@ -49,10 +49,10 @@ jobs:
         run: bandit -r . -lll -iii
 
       - name: Run Snyk vulnerability scan
-        uses: snyk/actions@master
+        uses: snyk/actions/node@master  # explicitly using node action
         with:
           command: test
-          paths: './frontend, ./backend'
+          args: ./frontend ./backend
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -81,21 +81,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send email notification
-        uses: dawidd6/action-send-mail@v3
         if: always()
+        uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ env.SMTP_SERVER }}
           server_port: ${{ env.SMTP_PORT }}
           username: ${{ env.SMTP_USERNAME }}
           password: ${{ env.SMTP_PASSWORD }}
-          subject: CI Pipeline - Incident Management - ${{ job.status }}
+          subject: CI Pipeline - Incident Management - ${{ needs.test-and-scan.result }}
           to: ${{ env.EMAIL_TO }}
           from: ${{ env.EMAIL_FROM }}
           body: |
-            The CI pipeline for Incident Management completed with status: ${{ job.status }}.
+            The CI pipeline for Incident Management completed with status: ${{ needs.test-and-scan.result }}.
 
             - Bandit and Snyk security scans were run.
             - Cypress UI tests were executed.
-            Please check the GitHub Actions logs for details.
 
-            Thank you.
+            Please check the GitHub Actions logs for detailed output.
