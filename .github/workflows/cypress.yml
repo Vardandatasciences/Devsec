@@ -1,4 +1,4 @@
-name: CI with Cypress Dashboard & Slack Notifications
+name: CI with Cypress Local Tests & Slack Notifications
 
 on:
   push:
@@ -14,7 +14,6 @@ jobs:
 
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
 
     steps:
       - name: Checkout code
@@ -39,9 +38,9 @@ jobs:
           url: http://localhost:8082
           timeout: 60
 
-      - name: Run Cypress tests and record to Dashboard
+      - name: Run Cypress tests locally
         working-directory: frontend
-        run: npx cypress run --record --key $CYPRESS_RECORD_KEY --spec "cypress/e2e/**/*.js"
+        run: npx cypress run --spec "cypress/e2e/**/*.js"
 
       - name: Send Slack notification on failure
         if: failure()
@@ -53,7 +52,7 @@ jobs:
           SLACK_TITLE: 'CI Pipeline Failed'
           SLACK_MESSAGE: |
             Cypress tests failed.
-            View detailed reports at https://cloud.cypress.io/projects/4aq1ki/runs
+            Please check the GitHub Actions logs for details.
 
       - name: Send Slack notification on success
         if: success()
@@ -65,4 +64,4 @@ jobs:
           SLACK_TITLE: 'CI Pipeline Succeeded'
           SLACK_MESSAGE: |
             Cypress tests passed successfully.
-            View detailed reports at https://cloud.cypress.io/projects/4aq1ki/runs
+            Everything looks good!
